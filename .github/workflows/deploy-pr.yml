@@ -4,11 +4,11 @@ on:
   push:
     branches-ignore:
       - main
-  pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - 'feature/*'
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,9 +22,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        working-directory: ./
 
       - name: Build the project
         run: npm run build
+        working-directory: ./
 
       - name: Deploy to Vercel
         id: deploy
@@ -36,8 +38,20 @@ jobs:
       - name: Get deployment URL
         id: deployment_info
         run: echo "::set-output name=url::$(vercel inspect --token ${{ secrets.VERCEL_TOKEN }} --output json | jq -r .url)"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
-      - name: Comment on PR
+      - name: Create Pull Request
+        id: create_pr
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Create Pull Request with Preview URL"
+          branch: "pr/${{ github.head_ref }}"
+          title: "Preview for ${{ github.head_ref }}"
+          body: "This pull request contains the changes from branch ${{ github.head_ref }} and a preview URL: [Preview URL](https://${{ steps.deployment_info.outputs.url }})"
+
+      - name: Add Comment to Pull Request
         uses: actions/github-script@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
