@@ -1,0 +1,64 @@
+rules:
+  - id: detect-xss-js
+    patterns:
+      - pattern: |
+          document.write({{ $VAR }});
+      - pattern: |
+          element.innerHTML = {{ $VAR }};
+      - pattern: |
+          $($VAR).html();
+    message: "Possible Cross-Site Scripting (XSS) vulnerability detected in JavaScript"
+    languages: [javascript, typescript]
+    severity: WARNING
+
+  - id: detect-xss-python
+    patterns:
+      - pattern: |
+          self.response.write(self.request.get($VAR))
+      - pattern: |
+          response.write(request.GET.get($VAR))
+    message: "Possible Cross-Site Scripting (XSS) vulnerability detected in Python"
+    languages: [python]
+    severity: WARNING
+
+  - id: detect-xss-php
+    patterns:
+      - pattern: |
+          echo $_GET[$VAR];
+      - pattern: |
+          echo $_POST[$VAR];
+    message: "Possible Cross-Site Scripting (XSS) vulnerability detected in PHP"
+    languages: [php]
+    severity: WARNING
+
+  - id: detect-xss-ruby
+    patterns:
+      - pattern: |
+          render :text => params[$VAR]
+    message: "Possible Cross-Site Scripting (XSS) vulnerability detected in Ruby"
+    languages: [ruby]
+    severity: WARNING
+
+  - id: detect-xss-go
+    patterns:
+      - pattern: |
+          {{ $TAG := $REQ.FormValue($PARAM) }}
+          ...
+          $RESP.Write([]byte($TAG))
+      - pattern: |
+          $RESP.Write([]byte($REQ.FormValue($PARAM)))
+    message: "Possible Cross-Site Scripting (XSS) vulnerability detected in Go"
+    languages: [go]
+    severity: WARNING
+    
+  - id: detect-xss-js
+    patterns:
+      - pattern: |
+          document.write({{ $VAR }});
+      - pattern: |
+          element.innerHTML = {{ $VAR }};
+      - pattern: |
+          $($VAR).html();
+    message: "Possible Cross-Site Scripting (XSS) vulnerability detected in JavaScript"
+    languages: [javascript, typescript]
+    severity: WARNING
