@@ -38,6 +38,7 @@ jobs:
             echo "::set-output name=result::success"
           else
             echo "::set-output name=result::failure"
+          fi
 
       - name: Archive Semgrep results
         if: failure()
@@ -52,6 +53,20 @@ jobs:
           cat semgrep.sarif
           echo "erreur XSS detectée" > xss_error.txt
 
+      - name: Save Semgrep result to file
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "success" > semgrep_result.txt
+          else
+            echo "failure" > semgrep_result.txt
+          fi
+
+      - name: Upload Semgrep result
+        uses: actions/upload-artifact@v4 
+        with:
+          name: semgrep_result
+          path: semgrep_result.txt
+
   deploy:
     runs-on: ubuntu-latest
     needs: [semgrep]
@@ -61,10 +76,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4  
 
+      - name: Download Semgrep result
+        uses: actions/download-artifact@v4  
+        with:
+          name: semgrep_result
+
+      - name: Check Semgrep result
+        id: check_semgrep
+        run: |
+          if grep -q "failure" semgrep_result.txt; then
+            echo "Semgrep found issues, skipping deployment."
+            exit 1
+          fi
+
       - name: Install Vercel CLI
+        if: steps.check_semgrep.outcome == 'success'
         run: npm install -g vercel
 
       - name: Deploy to Vercel
+        if: steps.check_semgrep.outcome == 'success'
         id: deploy_vercel
         run: |
           vercel link --yes --project ${{ secrets.VERCEL_PROJECT_ID }} --scope ${{ secrets.VERCEL_ORG_ID }} --token ${{ secrets.VERCEL_TOKEN }}
@@ -73,6 +103,7 @@ jobs:
           echo "DEPLOYMENT_URL=${DEPLOYMENT_URL}" # For debugging
 
       - name: Check deployment URL
+        if: steps.check_semgrep.outcome == 'success'
         run: |
           echo "The deployment URL is ${{ env.DEPLOYMENT_URL }}"
           if [ -z "${{ env.DEPLOYMENT_URL }}" ]; then
@@ -81,6 +112,7 @@ jobs:
           fi
 
       - name: Add PR comment
+        if: steps.check_semgrep.outcome == 'success'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
