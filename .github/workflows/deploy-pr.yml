@@ -49,6 +49,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const url = process.env.url;
+            console.log(`Deployment URL: ${url}`);
             if (!url) {
               throw new Error('Deployment URL is missing');
             }
