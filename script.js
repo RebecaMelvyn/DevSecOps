@@ -3,7 +3,6 @@ alert("hello !!");
 console.log("yoow");
 
 
-// script.js
 document.addEventListener('DOMContentLoaded', function() {
     // Récupère les paramètres de l'URL
     const urlParams = new URLSearchParams(window.location.search);
