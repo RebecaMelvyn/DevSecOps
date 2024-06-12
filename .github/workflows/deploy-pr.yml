@@ -20,15 +20,6 @@ jobs:
         with:
           node-version: '16'
 
-      - name: Remove .vercel directory if it exists
-        run: |
-          if [ -d ".vercel" ]; then
-            rm -rf .vercel
-          fi
-
-      - name: Link to Vercel project
-        run: vercel link --yes --project ${{ secrets.VERCEL_PROJECT_ID }} --scope ${{ secrets.VERCEL_ORG_ID }} --token ${{ secrets.VERCEL_TOKEN }}
-
       - name: Deploy to Vercel
         id: deploy
         run: vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes
