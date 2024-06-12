@@ -40,41 +40,8 @@ jobs:
         run: |
           cat semgrep.sarif
           echo "erreur XSS detectée" > xss_error.txt
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-
-      - name: Deploy to Vercel
-        id: deploy
-        run: vercel --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_ORG_ID }} --prod --yes
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      - name: Get deployment URL
-        id: deployment_info
-        run: |
-          DEPLOYMENT_URL=$(vercel inspect --token ${{ secrets.VERCEL_TOKEN }} --output json | jq -r .url)
-          echo "url=${DEPLOYMENT_URL}" >> $GITHUB_ENV
-
-      - name: Comment on PR
-        uses: actions/github-script@v3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const url = process.env.url;
-            github.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `Preview available at: [${url}](${url})`
-            });
-  
-    deploy:
+ 
+  deploy:
     runs-on: ubuntu-latest
     needs: semgrep
     if: github.event_name == 'pull_request' && needs.semgrep.result == 'success'
