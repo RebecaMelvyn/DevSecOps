@@ -73,7 +73,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  
+        uses: actions/checkout@v3  
 
       - name: Download Semgrep result
         uses: actions/download-artifact@v3
@@ -113,19 +113,11 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const previewUrl = process.env.DEPLOYMENT_URL;
-            if (!previewUrl) {
-              throw new Error('Deployment URL is missing');
-            }
-            const pullRequestNumber = context.payload.pull_request?.number;
-            if (!pullRequestNumber) {
-              console.error('Pull request number is undefined.');
-              return;
-            }
+            const previewUrl = process.env.PREVIEW_URL;
             await github.rest.issues.createComment({
-              issue_number: pullRequestNumber,
+              issue_number: context.payload.pull_request.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `Preview build URL: ${previewUrl}`
-            });
+              body: previewUrl ? `Preview build URL: ${previewUrl}` : `Preview build failed.`
+            })
 
