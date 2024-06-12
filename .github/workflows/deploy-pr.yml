@@ -35,9 +35,9 @@ jobs:
         id: save_semgrep_result
         run: |
           if [ $? -eq 0 ]; then
-            echo "::set-output name=result::success"
+            echo "result=success" >> $GITHUB_ENV
           else
-            echo "::set-output name=result::failure"
+            echo "result=failure" >> $GITHUB_ENV
           fi
 
       - name: Archive Semgrep results
