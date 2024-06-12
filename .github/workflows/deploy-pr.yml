@@ -118,8 +118,13 @@ jobs:
             if (!previewUrl) {
               throw new Error('Deployment URL is missing');
             }
+            const prNumber = context.payload.pull_request ? context.payload.pull_request.number : null;
+            if (!prNumber) {
+              console.error('Pull request number is undefined.');
+              return;
+            }
             await github.rest.issues.createComment({
-              issue_number: context.payload.pull_request.number,
+              issue_number: prNumber,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `Preview build URL: ${previewUrl}`  
