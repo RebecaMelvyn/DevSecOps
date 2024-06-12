@@ -46,5 +46,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `Preview available at: [${url}](${url})`
+              body: `Voici l'url de déploiement: [${url}](${url})`
             });
