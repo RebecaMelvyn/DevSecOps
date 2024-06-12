@@ -115,7 +115,7 @@ jobs:
           script: |
             const previewUrl = process.env.PREVIEW_URL;
             await github.rest.issues.createComment({
-              issue_number: context.payload.pull_request.number,
+              issue_number: context.payload.pull_request.?number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: previewUrl ? `Preview build URL: ${previewUrl}` : `Preview build failed.`
