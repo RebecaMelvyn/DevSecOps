@@ -28,7 +28,16 @@ jobs:
       - name: Run Semgrep
         id: semgrep_scan
         run: |
-          semgrep --config .semgrep.yml --error --metrics=off || echo "fail" > semgrep_result.txt
+          semgrep --config .semgrep.yml --error --metrics=off
+        continue-on-error: true
+
+      - name: Save Semgrep result
+        id: save_semgrep_result
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "::set-output name=result::success"
+          else
+            echo "::set-output name=result::failure"
 
       - name: Archive Semgrep results
         if: failure()
@@ -43,38 +52,14 @@ jobs:
           cat semgrep.sarif
           echo "erreur XSS detectée" > xss_error.txt
 
-      - name: Save Semgrep result
-        run: |
-          echo "success" > semgrep_result.txt
-
-      - name: Upload Semgrep result
-        uses: actions/upload-artifact@v4 
-        with:
-          name: semgrep_result
-          path: semgrep_result.txt
-  
   deploy:
     runs-on: ubuntu-latest
     needs: [semgrep]
-    if: github.event_name == 'pull_request' && env.result == 'success'
+    if: needs.semgrep.outputs.result == 'success'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4  
-
-      - name: Download Semgrep result
-        uses: actions/download-artifact@v4  
-        with:
-          name: semgrep_result
-
-      - name: Check Semgrep result
-        id: check_semgrep
-        run: |
-          cat semgrep_result.txt
-          if grep -q "failure" semgrep_result.txt; then
-            echo "Semgrep found issues, skipping deployment."
-            exit 1
-          fi
 
       - name: Install Vercel CLI
         run: npm install -g vercel
