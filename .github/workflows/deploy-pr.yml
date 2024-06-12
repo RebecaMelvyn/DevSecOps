@@ -117,7 +117,7 @@ jobs:
             if (!previewUrl) {
               throw new Error('Deployment URL is missing');
             }
-            const pullRequestNumber = context.payload.pull_request?.number;
+            const pullRequestNumber = context.payload.pull_request ? context.payload.pull_request.number : null;
             if (!pullRequestNumber) {
               console.error('Pull request number is undefined.');
               return;
@@ -126,6 +126,5 @@ jobs:
               issue_number: pullRequestNumber,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `Preview build URL: ${previewUrl}`
+              body: `Preview build URL: ${previewUrl}`  
             });
-
