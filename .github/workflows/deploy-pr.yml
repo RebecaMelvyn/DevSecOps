@@ -27,7 +27,8 @@ jobs:
 
       - name: Run Semgrep
         id: semgrep_scan
-        run: semgrep --config .semgrep.yml --error --metrics=off
+        run: |
+          semgrep --config .semgrep.yml --error --metrics=off || echo "fail" > semgrep_result.txt
 
       - name: Archive Semgrep results
         if: failure()
@@ -42,19 +43,44 @@ jobs:
           cat semgrep.sarif
           echo "erreur XSS detectée" > xss_error.txt
 
+      - name: Save Semgrep result
+        run: |
+          echo "success" > semgrep_result.txt
+
+      - name: Upload Semgrep result
+        uses: actions/upload-artifact@v3
+        with:
+          name: semgrep_result
+          path: semgrep_result.txt
+
   deploy:
     runs-on: ubuntu-latest
     needs: [semgrep]
-    if: github.event_name == 'pull_request' && needs.semgrep.outputs.semgrep_scan.result == 'success'
+    if: github.event_name == 'pull_request'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Download Semgrep result
+        uses: actions/download-artifact@v3
+        with:
+          name: semgrep_result
+
+      - name: Check Semgrep result
+        id: check_semgrep
+        run: |
+          if grep -q "fail" semgrep_result.txt; then
+            echo "Semgrep found issues, skipping deployment."
+            exit 1
+          fi
+
       - name: Install Vercel CLI
+        if: steps.check_semgrep.outcome == 'success'
         run: npm install -g vercel
 
       - name: Deploy to Vercel
+        if: steps.check_semgrep.outcome == 'success'
         id: deploy_vercel
         run: |
           vercel link --yes --project ${{ secrets.VERCEL_PROJECT_ID }} --scope ${{ secrets.VERCEL_ORG_ID }} --token ${{ secrets.VERCEL_TOKEN }}
@@ -63,6 +89,7 @@ jobs:
           echo "DEPLOYMENT_URL=${DEPLOYMENT_URL}" # For debugging
 
       - name: Check deployment URL
+        if: steps.check_semgrep.outcome == 'success'
         run: |
           echo "The deployment URL is ${{ env.DEPLOYMENT_URL }}"
           if [ -z "${{ env.DEPLOYMENT_URL }}" ]; then
@@ -71,6 +98,7 @@ jobs:
           fi
 
       - name: Add PR comment
+        if: steps.check_semgrep.outcome == 'success'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
