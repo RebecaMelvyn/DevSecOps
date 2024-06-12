@@ -2,7 +2,6 @@ alert("hello !!");
 
 console.log("yoow");
 
-
 document.addEventListener('DOMContentLoaded', function() {
     // Récupère les paramètres de l'URL
     const urlParams = new URLSearchParams(window.location.search);

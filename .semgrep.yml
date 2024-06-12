@@ -2,7 +2,7 @@ rules:
   - id: detect-xss-innerHTML
     patterns:
       - pattern: |
-          element.innerHTML = $UNTRUSTED_INPUT
+          $ELEMENT.innerHTML = $UNTRUSTED_INPUT
     message: "Possible Cross-Site Scripting (XSS) vulnerability detected: Avoid assigning untrusted input directly to innerHTML"
     languages: [javascript, typescript]
     severity: WARNING
