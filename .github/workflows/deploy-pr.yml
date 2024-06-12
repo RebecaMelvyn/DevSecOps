@@ -94,6 +94,7 @@ jobs:
 
       - name: Deploy to Vercel
         id: deploy_vercel
+        if: success() && env.GITHUB_JOB == 'semgrep'
         run: |
           vercel link --yes --project ${{ secrets.VERCEL_PROJECT_ID }} --scope ${{ secrets.VERCEL_ORG_ID }} --token ${{ secrets.VERCEL_TOKEN }}
           DEPLOYMENT_URL=$(vercel --cwd ./ --token ${{ secrets.VERCEL_TOKEN }})
@@ -110,6 +111,7 @@ jobs:
 
       - name: Add PR comment
         uses: actions/github-script@v6
+        if: success() && env.GITHUB_JOB == 'deploy'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -117,13 +119,10 @@ jobs:
             if (!previewUrl) {
               throw new Error('Deployment URL is missing');
             }
-            const pullRequestNumber = context.payload.pull_request ? context.payload.pull_request.number : null;
-            if (!pullRequestNumber) {
-              console.error('Pull request number is undefined.');
-              return;
-            }
+            const execSync = require('child_process').execSync;
+            const prNumber = execSync('echo ${{ github.event.number }}').toString().trim();
             await github.rest.issues.createComment({
-              issue_number: pullRequestNumber,
+              issue_number: prNumber,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `Preview build URL: ${previewUrl}`  
